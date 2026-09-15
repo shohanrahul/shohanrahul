@@ -13,12 +13,11 @@ describe('App gantt interactions', () => {
     expect(screen.getByText('Editable BOQ and estimating table')).toBeTruthy()
     expect(screen.getAllByText('01 Oct').length).toBeGreaterThan(0)
 
-    const firstBar = container.querySelector('.gantt-bar')
-    expect(firstBar?.getAttribute('style')).toContain('span 4')
+    expect(container.querySelector('.gantt-bar')?.getAttribute('style')).toContain('span 4')
 
     await user.click(screen.getByRole('button', { name: 'Week' }))
 
     expect(screen.getAllByText(/W1/).length).toBeGreaterThan(0)
-    expect(firstBar?.getAttribute('style')).toContain('span 1')
+    expect(container.querySelector('.gantt-bar')?.getAttribute('style')).toContain('span 1')
   })
 })

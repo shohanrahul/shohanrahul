@@ -301,6 +301,10 @@ function App() {
           <strong>{schedule.projectDuration} days</strong>
         </article>
         <article className="metric-card">
+          <span>Planned work-hours</span>
+          <strong>{numberFormatter.format(summary.plannedWorkHours)} h</strong>
+        </article>
+        <article className="metric-card">
           <span>Critical activities</span>
           <strong>{schedule.activities.filter((activity) => activity.critical).length}</strong>
         </article>
@@ -404,12 +408,47 @@ function App() {
                 }
               />
             </label>
+            <label>
+              Working hours/day
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={state.assumptions.workingHoursPerDay}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'update-assumption-number',
+                    field: 'workingHoursPerDay',
+                    value: Number(event.target.value),
+                  })
+                }
+              />
+            </label>
+            <label>
+              Working days/week
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={state.assumptions.workingDaysPerWeek}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'update-assumption-number',
+                    field: 'workingDaysPerWeek',
+                    value: Number(event.target.value),
+                  })
+                }
+              />
+            </label>
           </div>
           <ul className="standards-list">
             {state.assumptions.standards.map((standard) => (
               <li key={standard}>{standard}</li>
             ))}
           </ul>
+          <p className="assumption-summary">
+            Calendar basis: {numberFormatter.format(summary.workingHoursPerWeek)} hours/week.
+          </p>
         </article>
 
         <article className="panel">
@@ -773,14 +812,15 @@ function App() {
             ))}
           </div>
           {schedule.activities.map((activity) => {
-            const startColumn =
+            const scaledStart =
               scaleMode === 'day'
-                ? activity.earliestStart + 2
-                  : Math.floor(activity.earliestStart / safeWorkingDaysPerWeek) + 2
-            const span =
+                  ? activity.earliestStart
+                  : Math.floor(activity.earliestStart / safeWorkingDaysPerWeek)
+            const scaledSpan =
                 scaleMode === 'day'
                   ? Math.max(activity.duration, 1)
                   : Math.max(Math.ceil(activity.duration / safeWorkingDaysPerWeek), 1)
+            const startColumn = scaledStart + 2
 
             return (
               <div
@@ -807,7 +847,7 @@ function App() {
                 </div>
                 <div
                   className={activity.critical ? 'gantt-bar critical-bar' : 'gantt-bar'}
-                  style={{ gridColumn: `${startColumn} / span ${span}` }}
+                  style={{ gridColumn: `${startColumn} / span ${scaledSpan}` }}
                   title={`${activity.id}: ${activity.duration} day(s), crew ${activity.crew}`}
                 >
                   {activity.id}

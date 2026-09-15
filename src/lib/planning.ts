@@ -259,12 +259,25 @@ export const summarizeProject = (
   const overhead = round((directCost * assumptions.overheadPct) / 100)
   const contingency = round((directCost * assumptions.contingencyPct) / 100)
   const grandTotal = round(directCost + overhead + contingency)
+  const workingHoursPerWeek = round(
+    assumptions.workingHoursPerDay * assumptions.workingDaysPerWeek,
+    1,
+  )
+  const plannedWorkHours = round(
+    activities.reduce(
+      (total, activity) => total + activity.duration * assumptions.workingHoursPerDay,
+      0,
+    ),
+    1,
+  )
 
   return {
     directCost,
     overhead,
     contingency,
     grandTotal,
+    workingHoursPerWeek,
+    plannedWorkHours,
     rowCount: activities.length,
   }
 }

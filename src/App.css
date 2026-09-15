@@ -50,7 +50,7 @@
 }
 
 .metric-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .workspace-grid {
@@ -178,6 +178,12 @@ button:hover {
   border-radius: 12px;
   background: #eff6ff;
   color: #1d4ed8;
+}
+
+.assumption-summary {
+  margin-top: 16px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
 .status-stack,
