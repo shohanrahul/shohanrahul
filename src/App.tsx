@@ -156,7 +156,14 @@ const reducer = (state: ProjectState, action: ReducerAction): ProjectState => {
       return appendRevision(
         {
           ...state,
-          items: state.items.filter((item) => item.id !== action.id),
+          items: state.items
+            .filter((item) => item.id !== action.id)
+            .map((item) => ({
+              ...item,
+              predecessors: item.predecessors.filter(
+                (predecessor) => predecessor !== action.id,
+              ),
+            })),
         },
         createRevision('Removed BOQ row', action.id, `Removed ${action.id} from the estimate.`),
       )
@@ -694,8 +701,11 @@ function App() {
             {Array.from({ length: scheduleColumns }, (_, index) => (
               <div key={index} className="gantt-cell">
                 {scaleMode === 'day'
-                  ? `D${index + 1}`
-                  : `W${index + 1}`}
+                  ? dayToDateLabel(state.assumptions.startDate, index)
+                  : `${dayToDateLabel(
+                      state.assumptions.startDate,
+                      index * state.assumptions.workingDaysPerWeek,
+                    )} · W${index + 1}`}
               </div>
             ))}
           </div>

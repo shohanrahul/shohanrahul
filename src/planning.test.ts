@@ -88,4 +88,33 @@ describe('planning domain logic', () => {
 
     expect(computeItemQuantity(item)).toBe(0)
   })
+
+  it('preserves zero count or factor behaviour across all supported units', () => {
+    expect(
+      computeItemQuantity(
+        makeItem({
+          unit: 'm',
+          measurement: { length: 10, width: 0, depth: 0, count: 0, factor: 1 },
+        }),
+      ),
+    ).toBe(0)
+
+    expect(
+      computeItemQuantity(
+        makeItem({
+          unit: 'm2',
+          measurement: { length: 10, width: 2, depth: 0, count: 1, factor: 0 },
+        }),
+      ),
+    ).toBe(0)
+
+    expect(
+      computeItemQuantity(
+        makeItem({
+          unit: 'item',
+          measurement: { length: 0, width: 0, depth: 0, count: 0, factor: 1 },
+        }),
+      ),
+    ).toBe(0)
+  })
 })
