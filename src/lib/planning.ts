@@ -8,16 +8,26 @@ import type {
   ValidationIssue,
 } from '../types'
 
-const round = (value: number, digits = 2) =>
-  Number.parseFloat(value.toFixed(digits))
+const round = (value: number, digits = 2) => Number.parseFloat(value.toFixed(digits))
+
+const localDateFromInput = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, (month || 1) - 1, day || 1)
+}
 
 export const computeItemQuantity = (item: BoqItem) => {
-  const factors = Object.values(item.measurement).filter((value) => value > 0)
-  if (!factors.length) {
-    return 0
-  }
+  const { count, depth, factor, length, width } = item.measurement
 
-  return round(factors.reduce((total, value) => total * value, 1))
+  switch (item.unit) {
+    case 'm':
+      return round(length * count * factor)
+    case 'm2':
+      return round(length * width * count * factor)
+    case 'm3':
+      return round(length * width * depth * count * factor)
+    case 'item':
+      return round(count * factor)
+  }
 }
 
 export const computeItemCost = (item: BoqItem) =>
@@ -258,7 +268,7 @@ export const summarizeProject = (
 }
 
 export const dayToDateLabel = (startDate: string, dayOffset: number) => {
-  const date = new Date(startDate)
+  const date = localDateFromInput(startDate)
   date.setDate(date.getDate() + dayOffset)
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',

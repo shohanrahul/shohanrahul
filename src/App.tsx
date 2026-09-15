@@ -22,7 +22,7 @@ import type {
 
 type ReducerAction =
   | { type: 'update-assumption'; field: keyof ProjectAssumptions; value: string | number }
-  | { type: 'update-item'; id: string; field: keyof BoqItem; value: string }
+  | { type: 'update-item'; id: string; field: keyof BoqItem; value: string | number }
   | { type: 'update-measurement'; id: string; field: MeasurementField; value: number }
   | { type: 'add-item' }
   | { type: 'remove-item'; id: string }
@@ -95,7 +95,7 @@ const reducer = (state: ProjectState, action: ReducerAction): ProjectState => {
                 ...item,
                 [action.field]:
                   action.field === 'predecessors'
-                    ? action.value
+                    ? String(action.value)
                         .split(',')
                         .map((value) => value.trim())
                         .filter(Boolean)
@@ -492,7 +492,7 @@ function App() {
                           type: 'update-item',
                           id: item.id,
                           field: 'rate',
-                          value: event.target.value,
+                          value: Number(event.target.value),
                         })
                       }
                     />
@@ -509,7 +509,7 @@ function App() {
                           type: 'update-item',
                           id: item.id,
                           field: 'productivityPerDay',
-                          value: event.target.value,
+                          value: Number(event.target.value),
                         })
                       }
                     />

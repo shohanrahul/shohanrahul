@@ -80,4 +80,12 @@ describe('planning domain logic', () => {
 
     expect(issues.length).toBeGreaterThanOrEqual(3)
   })
+
+  it('treats zero measurement factors as zero quantity when included in the formula', () => {
+    const item = makeItem({
+      measurement: { length: 10, width: 2, depth: 0.5, count: 0, factor: 1 },
+    })
+
+    expect(computeItemQuantity(item)).toBe(0)
+  })
 })
