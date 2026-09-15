@@ -18,6 +18,7 @@ describe('App gantt interactions', () => {
     await user.click(screen.getByRole('button', { name: 'Week' }))
 
     expect(screen.getAllByText(/W1/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/08 Oct · W2/).length).toBeGreaterThan(0)
     expect(container.querySelector('.gantt-bar')?.getAttribute('style')).toContain('span 1')
   })
 })

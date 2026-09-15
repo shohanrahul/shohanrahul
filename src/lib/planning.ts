@@ -42,8 +42,10 @@ export const computeActivityDuration = (item: BoqItem) => {
   return Math.max(1, Math.ceil(quantity / item.productivityPerDay))
 }
 
-export const validateBoqItems = (items: BoqItem[]) =>
-  items.flatMap<ValidationIssue>((item) => {
+export const validateBoqItems = (items: BoqItem[]) => {
+  const itemIds = new Set(items.map((candidate) => candidate.id))
+
+  return items.flatMap<ValidationIssue>((item) => {
     const issues: ValidationIssue[] = []
 
     if (!item.description.trim()) {
@@ -86,8 +88,21 @@ export const validateBoqItems = (items: BoqItem[]) =>
       })
     }
 
+    const missingPredecessors = [...new Set(item.predecessors)].filter(
+      (predecessor) => !itemIds.has(predecessor),
+    )
+
+    if (missingPredecessors.length) {
+      issues.push({
+        itemId: item.id,
+        fields: ['predecessors'],
+        message: `Unknown predecessor reference(s): ${missingPredecessors.join(', ')}.`,
+      })
+    }
+
     return issues
   })
+}
 
 export const deriveActivities = (items: BoqItem[]): Activity[] =>
   items.map((item) => ({

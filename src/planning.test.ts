@@ -98,6 +98,14 @@ describe('planning domain logic', () => {
     expect(issues.length).toBeGreaterThanOrEqual(3)
   })
 
+  it('flags unknown predecessor references during validation', () => {
+    const issues = validateBoqItems([
+      makeItem({ id: 'A', predecessors: ['MISSING'] }),
+    ])
+
+    expect(issues.some((issue) => issue.fields.includes('predecessors'))).toBe(true)
+  })
+
   it('treats zero measurement factors as zero quantity when included in the formula', () => {
     const item = makeItem({
       measurement: { length: 10, width: 2, depth: 0.5, count: 0, factor: 1 },

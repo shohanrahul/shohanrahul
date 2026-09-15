@@ -806,7 +806,7 @@ function App() {
                   ? dayToDateLabel(state.assumptions.startDate, index)
                   : `${dayToDateLabel(
                       state.assumptions.startDate,
-                      index * safeWorkingDaysPerWeek,
+                      index * 7,
                     )} · W${index + 1}`}
               </div>
             ))}
