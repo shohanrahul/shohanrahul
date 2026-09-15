@@ -14,15 +14,33 @@ import {
 import type {
   BoqItem,
   MeasurementField,
-  ProjectAssumptions,
   ProjectState,
   RevisionEntry,
   ScaleMode,
 } from './types'
 
+type AssumptionTextField = 'projectName' | 'location' | 'currency' | 'startDate'
+type AssumptionNumberField =
+  | 'workingHoursPerDay'
+  | 'workingDaysPerWeek'
+  | 'overheadPct'
+  | 'contingencyPct'
+type ItemTextField =
+  | 'code'
+  | 'section'
+  | 'description'
+  | 'crew'
+  | 'workFront'
+  | 'specification'
+type ItemNumberField = 'rate' | 'productivityPerDay'
+
 type ReducerAction =
-  | { type: 'update-assumption'; field: keyof ProjectAssumptions; value: string | number }
-  | { type: 'update-item'; id: string; field: keyof BoqItem; value: string | number }
+  | { type: 'update-assumption-text'; field: AssumptionTextField; value: string }
+  | { type: 'update-assumption-number'; field: AssumptionNumberField; value: number }
+  | { type: 'update-item-text'; id: string; field: ItemTextField; value: string }
+  | { type: 'update-item-number'; id: string; field: ItemNumberField; value: number }
+  | { type: 'update-item-unit'; id: string; value: BoqItem['unit'] }
+  | { type: 'update-item-predecessors'; id: string; value: string }
   | { type: 'update-measurement'; id: string; field: MeasurementField; value: number }
   | { type: 'add-item' }
   | { type: 'remove-item'; id: string }
@@ -67,7 +85,8 @@ const newItemTemplate = (nextIndex: number): BoqItem => ({
 
 const reducer = (state: ProjectState, action: ReducerAction): ProjectState => {
   switch (action.type) {
-    case 'update-assumption': {
+    case 'update-assumption-text':
+    case 'update-assumption-number': {
       const nextState: ProjectState = {
         ...state,
         assumptions: {
@@ -86,20 +105,15 @@ const reducer = (state: ProjectState, action: ReducerAction): ProjectState => {
       )
     }
 
-    case 'update-item': {
+    case 'update-item-text':
+    case 'update-item-number': {
       const nextState: ProjectState = {
         ...state,
         items: state.items.map((item) =>
           item.id === action.id
             ? {
                 ...item,
-                [action.field]:
-                  action.field === 'predecessors'
-                    ? String(action.value)
-                        .split(',')
-                        .map((value) => value.trim())
-                        .filter(Boolean)
-                    : action.value,
+                [action.field]: action.value,
               }
             : item,
         ),
@@ -111,6 +125,46 @@ const reducer = (state: ProjectState, action: ReducerAction): ProjectState => {
           'Updated BOQ row',
           action.id,
           `Changed ${action.field} for ${action.id}.`,
+        ),
+      )
+    }
+
+    case 'update-item-unit': {
+      const nextState: ProjectState = {
+        ...state,
+        items: state.items.map((item) =>
+          item.id === action.id ? { ...item, unit: action.value } : item,
+        ),
+      }
+
+      return appendRevision(
+        nextState,
+        createRevision('Updated BOQ row', action.id, `Changed unit for ${action.id}.`),
+      )
+    }
+
+    case 'update-item-predecessors': {
+      const nextState: ProjectState = {
+        ...state,
+        items: state.items.map((item) =>
+          item.id === action.id
+            ? {
+                ...item,
+                predecessors: action.value
+                  .split(',')
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+              }
+            : item,
+        ),
+      }
+
+      return appendRevision(
+        nextState,
+        createRevision(
+          'Updated BOQ row',
+          action.id,
+          `Changed predecessors for ${action.id}.`,
         ),
       )
     }
@@ -198,16 +252,14 @@ function App() {
     () => summarizeProject(state.assumptions, activities),
     [activities, state.assumptions],
   )
+  const safeWorkingDaysPerWeek = Math.max(state.assumptions.workingDaysPerWeek, 1)
 
   const scheduleColumns = Math.max(
     scaleMode === 'day'
       ? schedule.projectDuration
-      : Math.ceil(
-          schedule.projectDuration / Math.max(state.assumptions.workingDaysPerWeek, 1),
-        ),
+      : Math.ceil(schedule.projectDuration / safeWorkingDaysPerWeek),
     1,
   )
-  const safeWorkingDaysPerWeek = Math.max(state.assumptions.workingDaysPerWeek, 1)
 
   return (
     <main className="app-shell">
@@ -269,7 +321,7 @@ function App() {
                 value={state.assumptions.projectName}
                 onChange={(event) =>
                   dispatch({
-                    type: 'update-assumption',
+                    type: 'update-assumption-text',
                     field: 'projectName',
                     value: event.target.value,
                   })
@@ -282,7 +334,7 @@ function App() {
                 value={state.assumptions.location}
                 onChange={(event) =>
                   dispatch({
-                    type: 'update-assumption',
+                    type: 'update-assumption-text',
                     field: 'location',
                     value: event.target.value,
                   })
@@ -295,7 +347,7 @@ function App() {
                 value={state.assumptions.currency}
                 onChange={(event) =>
                   dispatch({
-                    type: 'update-assumption',
+                    type: 'update-assumption-text',
                     field: 'currency',
                     value: event.target.value,
                   })
@@ -313,7 +365,7 @@ function App() {
                 value={state.assumptions.startDate}
                 onChange={(event) =>
                   dispatch({
-                    type: 'update-assumption',
+                    type: 'update-assumption-text',
                     field: 'startDate',
                     value: event.target.value,
                   })
@@ -329,7 +381,7 @@ function App() {
                 value={state.assumptions.overheadPct}
                 onChange={(event) =>
                   dispatch({
-                    type: 'update-assumption',
+                    type: 'update-assumption-number',
                     field: 'overheadPct',
                     value: Number(event.target.value),
                   })
@@ -345,7 +397,7 @@ function App() {
                 value={state.assumptions.contingencyPct}
                 onChange={(event) =>
                   dispatch({
-                    type: 'update-assumption',
+                    type: 'update-assumption-number',
                     field: 'contingencyPct',
                     value: Number(event.target.value),
                   })
@@ -456,7 +508,7 @@ function App() {
                       value={item.description}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-text',
                           id: item.id,
                           field: 'description',
                           value: event.target.value,
@@ -469,10 +521,9 @@ function App() {
                       value={item.unit}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-unit',
                           id: item.id,
-                          field: 'unit',
-                          value: event.target.value,
+                          value: event.target.value as BoqItem['unit'],
                         })
                       }
                     >
@@ -509,7 +560,7 @@ function App() {
                       value={item.rate}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-number',
                           id: item.id,
                           field: 'rate',
                           value: Number(event.target.value),
@@ -526,7 +577,7 @@ function App() {
                       value={item.productivityPerDay}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-number',
                           id: item.id,
                           field: 'productivityPerDay',
                           value: Number(event.target.value),
@@ -539,9 +590,8 @@ function App() {
                       value={item.predecessors.join(', ')}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-predecessors',
                           id: item.id,
-                          field: 'predecessors',
                           value: event.target.value,
                         })
                       }
@@ -552,7 +602,7 @@ function App() {
                       value={item.crew}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-text',
                           id: item.id,
                           field: 'crew',
                           value: event.target.value,
@@ -565,7 +615,7 @@ function App() {
                       value={item.workFront}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-text',
                           id: item.id,
                           field: 'workFront',
                           value: event.target.value,
@@ -579,7 +629,7 @@ function App() {
                       value={item.specification}
                       onChange={(event) =>
                         dispatch({
-                          type: 'update-item',
+                          type: 'update-item-text',
                           id: item.id,
                           field: 'specification',
                           value: event.target.value,
