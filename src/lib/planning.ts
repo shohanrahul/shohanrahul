@@ -225,43 +225,76 @@ export const computeSchedule = (activities: Activity[]): ScheduleResult => {
 }
 
 export const detectConflicts = (activities: ScheduledActivity[]): Conflict[] => {
-  const conflicts: Conflict[] = []
-
-  for (let index = 0; index < activities.length; index += 1) {
-    for (let next = index + 1; next < activities.length; next += 1) {
-      const current = activities[index]
-      const candidate = activities[next]
-      const overlapStart = Math.max(current.earliestStart, candidate.earliestStart)
-      const overlapFinish = Math.min(current.earliestFinish, candidate.earliestFinish)
-
-      if (overlapStart >= overlapFinish) {
-        continue
-      }
-
-      const sameCrew = current.crew === candidate.crew
-      const sameWorkFront = current.workFront === candidate.workFront
-
-      if (!sameCrew && !sameWorkFront) {
-        continue
-      }
-
-      const type = sameCrew && sameWorkFront
-        ? 'crew and work-front'
-        : sameCrew
-          ? 'crew'
-          : 'work-front'
-
-      conflicts.push({
-        type,
-        reason: `${current.id} overlaps ${candidate.id} on ${type}.`,
-        activityIds: [current.id, candidate.id],
-        overlapStart,
-        overlapFinish,
-      })
+  const pairFlags = new Map<
+    string,
+    {
+      crew: boolean
+      workFront: boolean
+      left: ScheduledActivity
+      right: ScheduledActivity
+      overlapStart: number
+      overlapFinish: number
     }
-  }
+  >()
 
-  return conflicts
+  const groups = new Map<string, ScheduledActivity[]>()
+
+  activities.forEach((activity) => {
+    ;[`crew:${activity.crew}`, `workFront:${activity.workFront}`].forEach((key) => {
+      groups.set(key, [...(groups.get(key) ?? []), activity])
+    })
+  })
+
+  groups.forEach((group, key) => {
+    const sorted = [...group].sort(
+      (left, right) => left.earliestStart - right.earliestStart,
+    )
+    const isCrewGroup = key.startsWith('crew:')
+
+    for (let index = 0; index < sorted.length; index += 1) {
+      const current = sorted[index]
+
+      for (let next = index + 1; next < sorted.length; next += 1) {
+        const candidate = sorted[next]
+
+        if (candidate.earliestStart >= current.earliestFinish) {
+          break
+        }
+
+        const overlapStart = Math.max(current.earliestStart, candidate.earliestStart)
+        const overlapFinish = Math.min(current.earliestFinish, candidate.earliestFinish)
+        const pairKey = [current.id, candidate.id].sort().join('::')
+        const existing = pairFlags.get(pairKey)
+
+        pairFlags.set(pairKey, {
+          crew: existing?.crew ?? isCrewGroup,
+          workFront: existing?.workFront ?? !isCrewGroup,
+          left: existing?.left ?? current,
+          right: existing?.right ?? candidate,
+          overlapStart: existing ? Math.max(existing.overlapStart, overlapStart) : overlapStart,
+          overlapFinish: existing
+            ? Math.min(existing.overlapFinish, overlapFinish)
+            : overlapFinish,
+        })
+      }
+    }
+  })
+
+  return [...pairFlags.values()].map((entry) => {
+    const type = entry.crew && entry.workFront
+      ? 'crew and work-front'
+      : entry.crew
+        ? 'crew'
+        : 'work-front'
+
+    return {
+      type,
+      reason: `${entry.left.id} overlaps ${entry.right.id} on ${type}.`,
+      activityIds: [entry.left.id, entry.right.id],
+      overlapStart: entry.overlapStart,
+      overlapFinish: entry.overlapFinish,
+    }
+  })
 }
 
 export const summarizeProject = (

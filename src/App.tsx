@@ -50,6 +50,7 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
   minimumFractionDigits: 0,
 })
+const CALENDAR_WEEK_DAYS = 7
 
 const createRevision = (
   action: string,
@@ -252,12 +253,11 @@ function App() {
     () => summarizeProject(state.assumptions, activities),
     [activities, state.assumptions],
   )
-  const safeWorkingDaysPerWeek = Math.max(state.assumptions.workingDaysPerWeek, 1)
 
   const scheduleColumns = Math.max(
     scaleMode === 'day'
       ? schedule.projectDuration
-      : Math.ceil(schedule.projectDuration / safeWorkingDaysPerWeek),
+      : Math.ceil(schedule.projectDuration / CALENDAR_WEEK_DAYS),
     1,
   )
 
@@ -680,6 +680,7 @@ function App() {
                     <button
                       type="button"
                       className="danger-button"
+                      aria-label={`Remove ${item.id} ${item.description}`}
                       onClick={() => dispatch({ type: 'remove-item', id: item.id })}
                     >
                       Remove
@@ -806,7 +807,7 @@ function App() {
                   ? dayToDateLabel(state.assumptions.startDate, index)
                   : `${dayToDateLabel(
                       state.assumptions.startDate,
-                      index * 7,
+                      index * CALENDAR_WEEK_DAYS,
                     )} · W${index + 1}`}
               </div>
             ))}
@@ -815,11 +816,11 @@ function App() {
             const scaledStart =
               scaleMode === 'day'
                   ? activity.earliestStart
-                  : Math.floor(activity.earliestStart / safeWorkingDaysPerWeek)
+                  : Math.floor(activity.earliestStart / CALENDAR_WEEK_DAYS)
             const scaledSpan =
                 scaleMode === 'day'
                   ? Math.max(activity.duration, 1)
-                  : Math.max(Math.ceil(activity.duration / safeWorkingDaysPerWeek), 1)
+                  : Math.max(Math.ceil(activity.duration / CALENDAR_WEEK_DAYS), 1)
             const startColumn = scaledStart + 2
 
             return (
