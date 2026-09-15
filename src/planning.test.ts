@@ -73,6 +73,23 @@ describe('planning domain logic', () => {
     expect(conflicts[0].type).toBe('crew')
   })
 
+  it('deduplicates repeated predecessors before CPM analysis', () => {
+    const items = [
+      makeItem({ id: 'A', description: 'A', productivityPerDay: 10 }),
+      makeItem({
+        id: 'B',
+        description: 'B',
+        productivityPerDay: 5,
+        predecessors: ['A', 'A'],
+      }),
+    ]
+
+    const schedule = computeSchedule(deriveActivities(items))
+
+    expect(schedule.hasCycle).toBe(false)
+    expect(schedule.projectDuration).toBe(6)
+  })
+
   it('flags validation issues for invalid rows', () => {
     const issues = validateBoqItems([
       makeItem({ description: '', rate: 0, productivityPerDay: 0 }),

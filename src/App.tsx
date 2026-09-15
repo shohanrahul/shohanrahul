@@ -202,9 +202,12 @@ function App() {
   const scheduleColumns = Math.max(
     scaleMode === 'day'
       ? schedule.projectDuration
-      : Math.ceil(schedule.projectDuration / state.assumptions.workingDaysPerWeek),
+      : Math.ceil(
+          schedule.projectDuration / Math.max(state.assumptions.workingDaysPerWeek, 1),
+        ),
     1,
   )
+  const safeWorkingDaysPerWeek = Math.max(state.assumptions.workingDaysPerWeek, 1)
 
   return (
     <main className="app-shell">
@@ -375,10 +378,20 @@ function App() {
                 Dependency cycle detected. Remove circular predecessors to restore CPM.
               </div>
             )}
-            <div className={conflicts.length ? 'notice warning' : 'notice success'}>
-              {conflicts.length
-                ? `${conflicts.length} overlapping crew/work-front conflict(s) found.`
-                : 'No crew or work-front conflicts found on the early-start plan.'}
+            <div
+              className={
+                schedule.hasCycle
+                  ? 'notice warning'
+                  : conflicts.length
+                    ? 'notice warning'
+                    : 'notice success'
+              }
+            >
+              {schedule.hasCycle
+                ? 'Conflict checking is blocked until dependency cycles are removed.'
+                : conflicts.length
+                  ? `${conflicts.length} overlapping crew/work-front conflict(s) found.`
+                  : 'No crew or work-front conflicts found on the early-start plan.'}
             </div>
           </div>
           <div className="issues-list">
@@ -704,7 +717,7 @@ function App() {
                   ? dayToDateLabel(state.assumptions.startDate, index)
                   : `${dayToDateLabel(
                       state.assumptions.startDate,
-                      index * state.assumptions.workingDaysPerWeek,
+                      index * safeWorkingDaysPerWeek,
                     )} · W${index + 1}`}
               </div>
             ))}
@@ -713,14 +726,11 @@ function App() {
             const startColumn =
               scaleMode === 'day'
                 ? activity.earliestStart + 2
-                : Math.floor(activity.earliestStart / state.assumptions.workingDaysPerWeek) + 2
+                  : Math.floor(activity.earliestStart / safeWorkingDaysPerWeek) + 2
             const span =
-              scaleMode === 'day'
-                ? Math.max(activity.duration, 1)
-                : Math.max(
-                    Math.ceil(activity.duration / state.assumptions.workingDaysPerWeek),
-                    1,
-                  )
+                scaleMode === 'day'
+                  ? Math.max(activity.duration, 1)
+                  : Math.max(Math.ceil(activity.duration / safeWorkingDaysPerWeek), 1)
 
             return (
               <div

@@ -115,7 +115,9 @@ export const computeSchedule = (activities: Activity[]): ScheduleResult => {
   )
 
   activities.forEach((activity) => {
-    activity.predecessors.forEach((predecessor) => {
+    const uniquePredecessors = [...new Set(activity.predecessors)]
+
+    uniquePredecessors.forEach((predecessor) => {
       if (!activityMap.has(predecessor)) {
         return
       }
@@ -155,7 +157,7 @@ export const computeSchedule = (activities: Activity[]): ScheduleResult => {
 
   topoOrder.forEach((activityId) => {
     const activity = activityMap.get(activityId)!
-    const start = activity.predecessors.reduce((latestFinish, predecessor) => {
+    const start = [...new Set(activity.predecessors)].reduce((latestFinish, predecessor) => {
       return Math.max(latestFinish, earliest.get(predecessor)?.finish ?? 0)
     }, 0)
 
