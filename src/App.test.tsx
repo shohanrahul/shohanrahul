@@ -14,12 +14,13 @@ describe('App gantt interactions', () => {
     expect(screen.getAllByText('01 Oct').length).toBeGreaterThan(0)
     expect(container.querySelector('.gantt-bar')?.getAttribute('style')).toContain('span 4')
 
-    await user.clear(screen.getByLabelText('Working days/week'))
-    await user.type(screen.getByLabelText('Working days/week'), '5')
+    await user.clear(screen.getByLabelText('Start date'))
+    await user.type(screen.getByLabelText('Start date'), '2026-10-15')
     await user.click(screen.getByRole('button', { name: 'Week' }))
 
     expect(screen.getAllByText(/W1/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/08 Oct · W2/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/15 Oct · W1/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/22 Oct · W2/).length).toBeGreaterThan(0)
     expect(container.querySelector('.gantt-bar')?.getAttribute('style')).toContain('span 1')
   })
 })

@@ -4,6 +4,7 @@ import {
   computeItemCost,
   computeItemQuantity,
   computeSchedule,
+  dayToDateLabel,
   deriveActivities,
   detectConflicts,
   validateBoqItems,
@@ -141,5 +142,10 @@ describe('planning domain logic', () => {
         }),
       ),
     ).toBe(0)
+  })
+
+  it('formats day offsets across month boundaries', () => {
+    expect(dayToDateLabel('2026-10-31', 0)).toBe('31 Oct')
+    expect(dayToDateLabel('2026-10-31', 1)).toBe('01 Nov')
   })
 })

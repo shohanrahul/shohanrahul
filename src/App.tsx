@@ -813,14 +813,12 @@ function App() {
             ))}
           </div>
           {schedule.activities.map((activity) => {
-            const scaledStart =
-              scaleMode === 'day'
-                  ? activity.earliestStart
-                  : Math.floor(activity.earliestStart / CALENDAR_WEEK_DAYS)
-            const scaledSpan =
-                scaleMode === 'day'
-                  ? Math.max(activity.duration, 1)
-                  : Math.max(Math.ceil(activity.duration / CALENDAR_WEEK_DAYS), 1)
+            const scaledStart = scaleMode === 'day'
+                ? activity.earliestStart
+                : Math.floor(activity.earliestStart / CALENDAR_WEEK_DAYS)
+            const scaledSpan = scaleMode === 'day'
+                ? Math.max(activity.duration, 1)
+                : Math.max(Math.ceil(activity.duration / CALENDAR_WEEK_DAYS), 1)
             const startColumn = scaledStart + 2
 
             return (
