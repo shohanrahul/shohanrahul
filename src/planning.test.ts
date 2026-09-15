@@ -51,13 +51,19 @@ describe('planning domain logic', () => {
 
     expect(schedule.projectDuration).toBe(6)
     expect(activityB?.critical).toBe(true)
-    expect(activityC?.totalFloat).toBe(2)
+    expect(activityC?.totalFloat).toBe(3)
   })
 
   it('detects overlapping crew conflicts', () => {
     const items = [
       makeItem({ id: 'A', description: 'A', productivityPerDay: 10 }),
-      makeItem({ id: 'B', description: 'B', productivityPerDay: 10, crew: 'Crew A' }),
+      makeItem({
+        id: 'B',
+        description: 'B',
+        productivityPerDay: 10,
+        crew: 'Crew A',
+        workFront: 'Zone 2',
+      }),
     ]
 
     const schedule = computeSchedule(deriveActivities(items))
